@@ -128,9 +128,18 @@ RUN curl https://nodejs.org/download/release/v6.9.2/node-v6.9.2-linux-x64.tar.gz
   npm install -g npm@3.10.9 && \
   rm -r /tmp/npm-* /root/.npm
 
+# 1. Use a local copy of the RVM PGP key because:
+#    * Keyservers don't have 100% uptime and
+#    * HKP default port 11371 is firewall blocked in some environments
+#    Docker does this too, see https://github.com/docker/docker/pull/29967
+# 2. Run `gpg --dry-run --import mpapis.asc` if you want to compare and verify
+#    its fingerprint against https://rvm.io/rvm/install#install-gpg-keys
+# 3. The key expires 2019-03-09
+COPY ./mpapis.asc /tmp/mpapis.asc
+
 # Install rvm
 ENV PATH /usr/local/rvm/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-RUN gpg --keyserver hkp://keys.gnupg.net --recv-keys D39DC0E3 && \
+RUN gpg --import /tmp/mpapis.asc && \
     curl -sSL https://raw.githubusercontent.com/wayneeseguin/rvm/stable/binscripts/rvm-installer | bash -s stable --ruby && \
     echo 'source /usr/local/rvm/scripts/rvm' >> /etc/bash.bashrc && \
     /bin/bash -l -c rvm requirements && \
